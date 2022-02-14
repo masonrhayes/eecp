@@ -454,9 +454,9 @@ md"""
 
 Marginal cost of production c = $(@bind cost Slider(0.50:0.50:10.0, default = 0.50, show_value = true))
 
-Size of leading-edge innovation γ = $(@bind gamma Slider(1.05:0.05:10.0, default = 1.05, show_value = true))
+Size of leading-edge innovation γ = $(@bind gamma Slider(1.05:0.05:10.0, default = 1.50, show_value = true))
 
-Consumer preferences for greener technology δ = $(@bind delta Slider(1.0:0.05:10.00, default = 2., show_value = true))
+Consumer preferences for greener technology δ = $(@bind delta Slider(1.0:0.05:10.00, default = 1.6, show_value = true))
 
 The cost of innovating κ = $(@bind kappa Slider([κ₂ - κ₁/2, κ₁, (κ₂ - κ₁/2)/0.50, κ₂, (κ₂ + κ₁/2)/1.05, κ₂ + κ₁/2], show_value = true))
 
@@ -469,7 +469,7 @@ Adjust the limits of the y axis below ↓:
 
 # ╔═╡ 2eca6601-21fa-47ca-a910-30e0a3e7d263
 begin
-	ylim1 = @bind a Slider(-5:0, default = -2, show_value = true);
+	ylim1 = @bind a Slider(-5:0, default = -1, show_value = true);
 	ylim2 = @bind b Slider(0:5, default = 2, show_value = true);
 	ylims = [ylim1, ylim2]
 end
@@ -540,16 +540,31 @@ begin
 	plot!(legend = :topright)
 	title!("Pollution & Welfare vs Competition")
 	xlabel!("Competition (Δ)")
-	xaxis!(50)
 	ylims!(a, b)
-	annotate!([(0.95, a - 0.40, ("More competition →", 8, :top, :juno))])
-	annotate!([(0.55, a - 0.40, ("← Less competition", 8, :top, :juno))])
+	annotate!([(0.9584, a, ("More competition →", 8, :bottom, :juno))])
+	annotate!([(0.546, a, ("← Less competition", 8, :bottom, :juno))])
 	annotate!([(0.57, b - 0.10, ("δ = $delta, γ = $gamma, c = $cost", 8, :top, :juno))])
 	
 end
 
 # ╔═╡ ca90d22c-b027-428c-9571-16bcd65ce05a
 Symbolics.derivative(U, Δ)
+
+# ╔═╡ 25c5a5d7-6ede-472f-81db-fa9daf1600f1
+md"""
+## Empirical Analysis
+
+Does the model hold in reality?
+
+In short -- yes! Let's look at a quick overview of the empirical findings from the paper:
+
+"""
+
+# ╔═╡ b2fc04ae-76e9-4435-bb0e-543141dbbb56
+html"""
+      <iframe width="560" height="315" src="https://siasky.net/AAChA3GA7Rk9jo8MqiHmJUohJE1omIkwNVAjX9i5-zrz1A" frameborder="0" allowfullscreen></iframe>
+      </iframe>
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2095,5 +2110,7 @@ version = "0.9.1+5"
 # ╟─e0bd7688-f1ed-44e5-ab1b-42631c2a21b7
 # ╠═c18a134c-e164-4a48-9ec5-553d17b53eb2
 # ╠═ca90d22c-b027-428c-9571-16bcd65ce05a
+# ╟─25c5a5d7-6ede-472f-81db-fa9daf1600f1
+# ╟─b2fc04ae-76e9-4435-bb0e-543141dbbb56
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
