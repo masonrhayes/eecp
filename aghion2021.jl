@@ -434,7 +434,8 @@ The way that emissions and welfare change depends on the level of $κ$.
 
 # ╔═╡ bad7baad-2f48-495e-8b0e-6726fcec5371
 md"""
-## How do emissions change based on changes in:
+## An interactive visualization
+### How do emissions & pollution change with changes in ``δ, γ, κ, Δ, c``, etc?
 
 -  $κ$, the measure of (lack of) ideas/managerial capacity that makes innovation more costly?
 - Marginal cost c?
@@ -458,7 +459,7 @@ Size of leading-edge innovation γ = $(@bind gamma Slider(1.05:0.05:10.0, defaul
 
 Consumer preferences for greener technology δ = $(@bind delta Slider(1.0:0.05:10.00, default = 1.6, show_value = true))
 
-The cost of innovating κ = $(@bind kappa Slider([κ₂ - κ₁/2, κ₁, (κ₂ - κ₁/2)/0.50, κ₂, (κ₂ + κ₁/2)/1.05, κ₂ + κ₁/2], show_value = true))
+The cost of innovating κ = $(@bind kappa Slider([κ₂ - κ₁/2, κ₁, κ₂, (κ₂ - κ₁/2)/0.50, (κ₂ + κ₁/2)/1.05, κ₂ + κ₁/2], show_value = true))
 
 """
 
@@ -469,13 +470,13 @@ Adjust the limits of the y axis below ↓:
 
 # ╔═╡ 2eca6601-21fa-47ca-a910-30e0a3e7d263
 begin
-	ylim1 = @bind a Slider(-5:0, default = -1, show_value = true);
-	ylim2 = @bind b Slider(0:5, default = 2, show_value = true);
+	ylim1 = @bind a Slider(-5:0.5:0, default = -1, show_value = true);
+	ylim2 = @bind b Slider(0:0.5:5, default = 2, show_value = true);
 	ylims = [ylim1, ylim2]
 end
 
 # ╔═╡ 0d384486-b3ec-4526-8804-d42687644c6d
-Delta = @bind Delta Slider(0.5:0.01:0.99, default = 0.75, show_value = true)
+Delta = @bind Delta Slider(0.51:0.01:0.99, default = 0.75, show_value = true)
 
 # ╔═╡ e0a1f62a-de89-4247-b15d-c7c88a804988
 md"""
@@ -535,7 +536,7 @@ my_data = DataFrame(emissions = [emissions_v_competition(i) for i in 0.50:0.01:1
 
 # ╔═╡ a295ec9e-6a00-4b9e-8254-9ae70cf2cf51
 begin
-	plot(my_data.Δ, my_data.emissions, label = "Emissions", color = "white", theme(:juno))
+	plot(my_data.Δ, my_data.emissions, label = "Emissions", color = "black", theme(:default))
 	plot!(my_data.Δ, my_data.welfare, label = "Welfare", color = "green")
 	plot!(legend = :topright)
 	title!("Pollution & Welfare vs Competition")
