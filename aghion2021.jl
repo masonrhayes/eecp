@@ -26,17 +26,6 @@ by Aghion, Bénabou, Martin, and Roulet (2021)
 *Presentation by* Mason Hayes and Martí Puig
 """
 
-# ╔═╡ 0f4735b1-f2cd-499c-b995-166872a3a1ef
-md"""
-#### Follow along by scanning this QR code:
-"""
-
-# ╔═╡ 96e82adf-2a20-4949-963e-525a5139aa8e
-begin 
-	url = download("https://masonrhayes.keybase.pub/projects/pluto/aghion2021_qrcode.png")
-	qr = load(url)
-end
-
 # ╔═╡ d21e9e92-f812-43d7-890e-ec140bff80ed
 PlutoUI.TableOfContents(aside = false)
 
@@ -179,7 +168,7 @@ Invest′(k_f)
 
 # ╔═╡ cc1a7094-eab8-443e-bd44-b83914ef1015
 md"""
-## Consider an oligopoly with firms A and B. 
+## Consider a duopoly with firms A and B. 
 
 And consider an *unleveled sector* where, for example, $k_A = k_B + 1$ which means that firm A has invested $\kappa z^2 /2$ units of labor to produce a technology that is $\gamma$ times cleaner. 
 
@@ -223,7 +212,7 @@ Profits are:
 """
 
 # ╔═╡ ae6f27be-c8cb-4abf-a3ba-6e8d84fa2afe
-πᴹ = yᴹ*(pᴹ - c)
+πᴹ = yᴹ*(pᴹ - c) |> expand |> simplify
 
 # ╔═╡ 5c0da089-c726-498b-9387-0e7de160fd4f
 dπᴹd(a) = Symbolics.derivative(πᴹ, a);
@@ -345,7 +334,7 @@ dπdz = Symbolics.derivative(z*πᴹ + (1-z)*π_D(Δ) - κ*z^2 /2, z)
 ẑ = Symbolics.solve_for(dπdz ~ 0, z)
 
 # ╔═╡ 39ec2265-f90a-4f30-aa3f-20e0814f7afb
-ẑ |> simplify
+ẑ |> simplify == Δ*πᴹ/κ
 
 # ╔═╡ 70940ee4-b6cf-4783-acfd-3277b1252daa
 I(Δ) |> expand |> simplify
@@ -453,15 +442,18 @@ md"""
 md"""
 #### Visualizing the model
 
-Marginal cost of production c = $(@bind cost Slider(0.50:0.50:10.0, default = 0.50, show_value = true))
+Marginal cost of production c = $(@bind cost Slider(0.1:0.10:10.0, default = 0.50, show_value = true))
 
 Size of leading-edge innovation γ = $(@bind gamma Slider(1.05:0.05:10.0, default = 1.50, show_value = true))
 
-Consumer preferences for greener technology δ = $(@bind delta Slider(1.0:0.05:10.00, default = 1.6, show_value = true))
+Consumer preferences for greener technology δ = $(@bind delta Slider(0.0:0.05:10.00, default = 1.6, show_value = true))
 
-The cost of innovating κ = $(@bind kappa Slider([κ₂ - κ₁/2, κ₁, κ₂, (κ₂ - κ₁/2)/0.50, (κ₂ + κ₁/2)/1.05, κ₂ + κ₁/2], show_value = true))
+The cost of innovating κ = $(@bind kappa Slider([κ₂ - κ₁/2, κ₁, κ₂, (κ₂ - κ₁/2)/0.50 , κ₂ + κ₁/2], show_value = false)) = 
 
 """
+
+# ╔═╡ e3e35308-5845-4713-b945-4a0c4fcab000
+kappa
 
 # ╔═╡ 4e873006-8c8c-467b-a8a4-4a8a4e1f13d7
 md"""
@@ -470,13 +462,13 @@ Adjust the limits of the y axis below ↓:
 
 # ╔═╡ 2eca6601-21fa-47ca-a910-30e0a3e7d263
 begin
-	ylim1 = @bind a Slider(-5:0.5:0, default = -1, show_value = true);
-	ylim2 = @bind b Slider(0:0.5:5, default = 2, show_value = true);
+	ylim1 = @bind a Slider(-5:0.5:0, default = 0, show_value = true);
+	ylim2 = @bind b Slider(0:0.5:5, default = 1.5, show_value = true);
 	ylims = [ylim1, ylim2]
 end
 
 # ╔═╡ 0d384486-b3ec-4526-8804-d42687644c6d
-Delta = @bind Delta Slider(0.51:0.01:0.99, default = 0.75, show_value = true)
+Delta = @bind Delta Slider(0.500:0.001:0.999, default = 0.75, show_value = true)
 
 # ╔═╡ e0a1f62a-de89-4247-b15d-c7c88a804988
 md"""
@@ -509,30 +501,19 @@ U = (1 - I(Δ))*log(output(Δ)) + I(Δ)*log(γ^δ * yᴹ)
 
 # ╔═╡ 4664d0b6-cff9-4bf3-801f-9ade3e9de2ac
 begin 
-	emissions = round((substitute(substitute(X(Delta), Dict(κ => kappa)), Dict((γ => gamma, δ => delta, c => cost))) |> simplify).val, digits = 4);
-	welfare = round((substitute(substitute(U, Dict((κ => kappa, Δ => Delta))), Dict((γ => gamma, δ => delta, c => cost))) |> simplify).val, digits = 4);
-end;
+	# Calculate emissions and welfare conditional on parameter values
+	emissions = round((substitute(substitute(X(Delta), Dict(κ => kappa)), Dict((γ => gamma, δ => delta, c => cost))) |> simplify).val, digits = 3);
+	welfare = round((substitute(substitute(U, Dict((κ => kappa, Δ => Delta))), Dict((γ => gamma, δ => delta, c => cost))) |> simplify).val, digits = 3);
 
-# ╔═╡ 40c38155-60b5-416e-a39c-39c30b974222
-md"""
-Assuming that ``δ =`` $delta, ``γ =`` $gamma, ``c =`` $cost, ``Δ =`` $Delta, and ``κ =`` $kappa, then:
-
-#### Emissions $(emissions)
-
-#### Welfare: $(welfare)
-
-"""
-
-# ╔═╡ f78d9a27-5cc5-4846-95f0-057252eaa762
-begin 
+	# Rewrite functions to apply to a dataframe
 	emissions_v_competition(x) = round((substitute(substitute(X(x), Dict(κ => kappa)), Dict((γ => gamma, δ => delta, c => cost))) |> simplify).val, digits = 4);
 	welfare_v_competition(x) = round((substitute(substitute(U, Dict((κ => kappa, Δ => x))), Dict((γ => gamma, δ => delta, c => cost))) |> simplify).val, digits = 4);
-end;
 
-# ╔═╡ 65c592fe-cf9a-4c18-b779-b719af9e5220
-my_data = DataFrame(emissions = [emissions_v_competition(i) for i in 0.50:0.01:1.0],
+	# Write to dataframe
+	my_data = DataFrame(emissions = [emissions_v_competition(i) for i in 0.50:0.01:1.0],
 	welfare = [welfare_v_competition(i) for i in 0.50:0.01:1.0],
 	Δ = 0.50:0.01:1.0);
+end;
 
 # ╔═╡ a295ec9e-6a00-4b9e-8254-9ae70cf2cf51
 begin
@@ -547,6 +528,16 @@ begin
 	annotate!([(0.57, b - 0.10, ("δ = $delta, γ = $gamma, c = $cost", 8, :top, :juno))])
 	
 end
+
+# ╔═╡ 40c38155-60b5-416e-a39c-39c30b974222
+md"""
+#### Assuming that ``δ =`` $delta, ``γ =`` $gamma, ``c =`` $cost, ``Δ =`` $Delta, and ``κ =`` $kappa, then:
+
+### Emissions = **$(emissions)**
+
+### Welfare = **$(welfare)**
+
+"""
 
 # ╔═╡ ca90d22c-b027-428c-9571-16bcd65ce05a
 Symbolics.derivative(U, Δ)
@@ -2010,8 +2001,6 @@ version = "0.9.1+5"
 # ╔═╡ Cell order:
 # ╠═fc9e304e-850c-11ec-24dd-3bf8c6e392a3
 # ╟─c3a34ad8-3405-4e90-8460-f06234f91610
-# ╟─0f4735b1-f2cd-499c-b995-166872a3a1ef
-# ╟─96e82adf-2a20-4949-963e-525a5139aa8e
 # ╟─d21e9e92-f812-43d7-890e-ec140bff80ed
 # ╟─b3938d08-cfcb-4021-a847-3fe6fbd76cbb
 # ╟─851053a7-c31b-4722-a443-a8e212516359
@@ -2068,7 +2057,7 @@ version = "0.9.1+5"
 # ╟─877190a3-2024-4ef0-bda7-7081d6c145fb
 # ╟─c188679c-c689-4b84-82a7-94872c4ff4f2
 # ╟─20c63144-8102-4204-8b0a-f3e861a50ceb
-# ╠═daca5c07-366d-44bb-bfd4-37528000768c
+# ╟─daca5c07-366d-44bb-bfd4-37528000768c
 # ╟─214c6ce1-fd94-460c-8a46-d150e4cc85be
 # ╠═39ec2265-f90a-4f30-aa3f-20e0814f7afb
 # ╠═eccbf170-1ee3-49fa-8ad3-4f407e86df1d
@@ -2099,14 +2088,13 @@ version = "0.9.1+5"
 # ╟─bad7baad-2f48-495e-8b0e-6726fcec5371
 # ╟─ce6f05f4-af9f-45c7-811c-f9fc5d3269ad
 # ╟─5a1d7422-b6ac-41d0-8051-70fbf8d59236
+# ╟─e3e35308-5845-4713-b945-4a0c4fcab000
 # ╟─a295ec9e-6a00-4b9e-8254-9ae70cf2cf51
 # ╟─4e873006-8c8c-467b-a8a4-4a8a4e1f13d7
 # ╟─2eca6601-21fa-47ca-a910-30e0a3e7d263
-# ╟─0d384486-b3ec-4526-8804-d42687644c6d
+# ╠═0d384486-b3ec-4526-8804-d42687644c6d
 # ╟─40c38155-60b5-416e-a39c-39c30b974222
 # ╟─4664d0b6-cff9-4bf3-801f-9ade3e9de2ac
-# ╟─f78d9a27-5cc5-4846-95f0-057252eaa762
-# ╟─65c592fe-cf9a-4c18-b779-b719af9e5220
 # ╟─e0a1f62a-de89-4247-b15d-c7c88a804988
 # ╟─e0bd7688-f1ed-44e5-ab1b-42631c2a21b7
 # ╠═c18a134c-e164-4a48-9ec5-553d17b53eb2
