@@ -19,32 +19,21 @@ using DataFrames, StatsBase, PlutoUI, Symbolics
 
 # ╔═╡ 5f6503f1-a50c-454a-baca-55a898146f57
 md"""
+
+## Solving the exercise
+
 Let's create a dataframe of the data we are given:
 """
 
 # ╔═╡ 88aea7bd-3be8-4a21-8291-8e8d3a3aeca9
-data = DataFrame(
+df = sort(
+	DataFrame(
 	θ = ["H", "M", "L"],
 	a = [85000.0, 60000.0, 40000.0],
 	hours = [300.0, 5700.0, 2760.0],
 	fuel_cost = repeat([72.0], 3),
 	cap_cost = repeat([6.85], 3)
-)
-
-# ╔═╡ 6feae4c8-4910-4361-a48a-ce12f5dd7c07
-df = sort(data, :a)
-
-# ╔═╡ 2dc1da6e-3da5-4681-b7bd-ac3358da23cb
-md"""
-And now define the functions for demand and elasticity
-"""
-
-# ╔═╡ a7a3a395-a91a-40d2-80da-3e639d3c39b9
-begin
-	D((a, b, p)) = a .- b.*p # Demand function
-	ε_w((b,p,D,s)) = b.*p./D .* s # = weighted elasticity function
-	S((a, b, p)) = 0.5 .* (a.^2 .- (b .* p).^2) # served demand function
-end;
+	), :a)
 
 # ╔═╡ a28c77ef-e445-4ac2-b183-c4da98f3a4c2
 md"""
@@ -62,57 +51,79 @@ Using the slider below, we can adjust b until the weighted elasticity equals 0.0
 # ╔═╡ 0deaef71-dc51-4aa1-943d-933070f8f89b
 b = @bind b Slider(2.00:0.005:7.00, show_value = true, default = 5.17)
 
-# ╔═╡ bb612988-5e14-4d2d-ab4d-fe143161d06e
-begin # Set the time share = hours/total_hours; the demand function; and elasticity function
-	df.time_share .= df.hours ./ sum(df.hours)
-	df.D = D((df.a, b, p))
-	df.elasticity .= ε_w((b,p,df.D, df.time_share))
-end;
-
 # ╔═╡ 7b23c101-6b8f-4ecf-878b-0c6b44c3302d
 ## Notice you can use the arrow keys to be more precise
 weighted_elasticity = round(sum(b.*p ./ df.D .* df.time_share), digits = 5)
 
-# ╔═╡ 7e4c0b63-df4a-4452-9465-7a318b30c042
-md""" 
-Supply (?) is given by:
+# ╔═╡ ff0d78ba-7597-476c-8549-bfd1577e092c
+md"""
+## Case θ = $(@bind θ Select([1,2,3]))
+
 """
 
-# ╔═╡ 72079536-4c38-4c01-97c3-0d6e7f5756fb
-df.served_demand .= S((df.a, b, p))
+# ╔═╡ d26c71f8-1a0b-49f8-baed-8dd808dfc08e
+md"""
+There are 3 potential cases: ``θ ∈ [L, M, H]``, corresponding to cases 1, 2, and 3, respectively. For each case, we have the demand constraint that the optimal capacity must be greater than the demand at the peak period.
 
-# ╔═╡ ed831257-d970-462f-9ddc-436c16aadd0c
-df.VOLL = df.served_demand ./ df.D
-
-# ╔═╡ 6ba91529-d230-4343-8994-36868e233f9a
-mean((df.VOLL .- (df.fuel_cost .+ df.cap_cost)) .* df.time_share)
-
-# ╔═╡ 383df7ac-de9a-4466-a137-eaff92839311
-P((a, b, K)) = (a .- K)/b
+Let's refer to any ``θ ∈ [L, M, H]`` as a *period*. Then, for any period, the demand in that period must be less than or equal to the total capacity. If this is satisfied in period 3, then it is always satisfied, since period 3 corresponds to ``θ = H``, the period of highest demand.
+"""
 
 # ╔═╡ b1c42a12-f33c-4c5f-a94d-2867c83b197a
 @bind K NumberField(40000.:100.:100000.)
 
+# ╔═╡ a14f7ba2-04be-44ad-853c-9c4732d45109
+md"""
+#### Adjust ``K`` above so that the expected dual price of the capacity equals its fixed cost per hour (6.85€)
+"""
+
 # ╔═╡ d52ae61d-6279-4da2-97dd-934d0f97d4b2
+# the values were obtained by selecting Case θ and then adjusting K as directed in the cell above
+
 K̂ = [54147., 60825., 83592.]
 
-# ╔═╡ ff0d78ba-7597-476c-8549-bfd1577e092c
+# ╔═╡ a53208d1-7a33-4950-8742-d4430fe621ae
 md"""
-## Case $(@bind θ Select([1,2,3]))
+### Functions and further calculations
+"""
 
+# ╔═╡ a0186edd-8afa-46db-8b34-19e275214b5c
+md"""
+Define functions for 
+"""
+
+# ╔═╡ a7a3a395-a91a-40d2-80da-3e639d3c39b9
+begin
+	D((a, b, p)) = a .- b.*p # Demand function
+	ε_w((b,p,D,s)) = b.*p./D .* s # = weighted elasticity function
+	S((a, b, p)) = 0.5 .* (a.^2 .- (b .* p).^2) # gross surplus
+	P((a, b, K)) = (a .- K)/b # price function
+end
+
+# ╔═╡ ce53326a-2a8a-4bb2-9b5f-c1ec1c2114a7
+md"""
+## The solution
+
+We have that the optimal ``K^* \approx`` $(K̂[3]) MW, which corresponds to a price of $(round(P((df.a[3], b, K̂[3])), digits = 3)) €/MWh.
+
+With CCGT of power 450 MW, this corresponds to $(ceil(K̂[3]/450)) power stations.
+
+
+"""
+
+# ╔═╡ 94da671b-ca21-487e-8b80-d43e82bdbb3e
+md"""
+
+### When ``K =`` $(K̂[θ]) and ``θ =`` $(θ), then the optimal price is: $(P((df.a[θ], b, K̂[θ])))
 """
 
 # ╔═╡ 6c2648a8-e894-4f35-be28-d3f8aab665a1
 # ↑ adjust the value of K above ↑ to make this cell equal to 6.85
-df.time_share[θ:3] .* (P((df.a[θ:3], b, K)) - df.fuel_cost[θ:3]) |> sum
-
-# ╔═╡ 51f36784-fe0e-4a11-8ade-32edcd2a41fb
-D((df.a, 5.17, p))[θ]
+round(df.time_share[θ:3] .* (P((df.a[θ:3], b, K)) - df.fuel_cost[θ:3]) |> sum, digits = 3)
 
 # ╔═╡ 83c7f56e-defe-4f72-9e51-44bdba2b1a0c
 md"""
 
-Is optimal capacity $(K̂[θ]) greater than demand $(D((df.a, 5.17, p))[θ])? 
+Is optimal capacity $(K̂[θ]) less than demand $(D((df.a, 5.17, p))[θ])? 
 
 **$(K̂[θ] <= D((df.a, 5.17, p))[θ])**
 """
@@ -122,19 +133,40 @@ md"""
 
 ## Case 1
 
-When the capacity constraint is binding even under low demand ($θ = L$), then the optimal $K^* \approx 54,147$ MW. But this is higher than , so cannot be optimal.
+When the capacity constraint is binding even under low demand ($θ = L$), then the optimal ``K^* \approx`` $(K̂[1]) MW. But this is higher than $(D((df.a, 5.17, p))[1]), so cannot be optimal.
 
 ## Case 2
 
-So, we know we need more capacity than in Case 1. Let's consider case 2, under periods of medium demand ($θ = M$). Then, the optimal $K^* \approx 60825$.
+So, we know we need more capacity than in Case 1. Let's consider case 2, under periods of medium demand (``θ = M``). Then, the optimal ``K^* \approx`` $(K̂[2]).
 
-But again, this is higher than the demand $(D((df.a, 5.17, p))[θ]).
+But again, this is higher than the demand $(D((df.a, 5.17, p))[2]).
 
 ## Case 3
 
-Under case
+So, we know we need more capacity than in Case 2 as well. Now in case 3, under periods of peak demand (``θ = H``). Then, the optimal ``K^* \approx`` $(K̂[3]) which lies within the range of medium demand and peak demand, ``K ∈`` $(D((df.a, 5.17, p))[2], D((df.a, 5.17, p))[3]).
 
 """
+
+# ╔═╡ 2dc1da6e-3da5-4681-b7bd-ac3358da23cb
+md"""
+And now call the functions for demand and elasticity and store them in the data frame
+"""
+
+# ╔═╡ bb612988-5e14-4d2d-ab4d-fe143161d06e
+begin # Set the time share = hours/total_hours; the demand function; and elasticity function
+	df.time_share .= df.hours ./ sum(df.hours)
+	df.D = D((df.a, b, p))
+	df.elasticity .= ε_w((b,p,df.D, df.time_share))
+end;
+
+# ╔═╡ 72079536-4c38-4c01-97c3-0d6e7f5756fb
+df.served_demand .= S((df.a, b, p))
+
+# ╔═╡ ed831257-d970-462f-9ddc-436c16aadd0c
+df.VOLL = df.served_demand ./ df.D
+
+# ╔═╡ 6ba91529-d230-4343-8994-36868e233f9a
+mean((df.VOLL .- (df.fuel_cost .+ df.cap_cost)) .* df.time_share)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -880,28 +912,30 @@ uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 
 # ╔═╡ Cell order:
 # ╠═2edf0470-88f7-11ec-35a5-c77833b3aad4
+# ╟─ce53326a-2a8a-4bb2-9b5f-c1ec1c2114a7
 # ╟─5f6503f1-a50c-454a-baca-55a898146f57
-# ╠═88aea7bd-3be8-4a21-8291-8e8d3a3aeca9
-# ╠═6feae4c8-4910-4361-a48a-ce12f5dd7c07
-# ╟─2dc1da6e-3da5-4681-b7bd-ac3358da23cb
-# ╠═a7a3a395-a91a-40d2-80da-3e639d3c39b9
-# ╠═bb612988-5e14-4d2d-ab4d-fe143161d06e
+# ╟─88aea7bd-3be8-4a21-8291-8e8d3a3aeca9
 # ╟─a28c77ef-e445-4ac2-b183-c4da98f3a4c2
 # ╟─ebda0a22-0d15-4eca-b7c8-72a80e27819b
 # ╟─d3818f0c-2223-4e04-b5f4-50e632087f61
 # ╟─0deaef71-dc51-4aa1-943d-933070f8f89b
 # ╟─7b23c101-6b8f-4ecf-878b-0c6b44c3302d
-# ╟─7e4c0b63-df4a-4452-9465-7a318b30c042
+# ╟─ff0d78ba-7597-476c-8549-bfd1577e092c
+# ╟─d26c71f8-1a0b-49f8-baed-8dd808dfc08e
+# ╟─94da671b-ca21-487e-8b80-d43e82bdbb3e
+# ╠═b1c42a12-f33c-4c5f-a94d-2867c83b197a
+# ╟─a14f7ba2-04be-44ad-853c-9c4732d45109
+# ╠═6c2648a8-e894-4f35-be28-d3f8aab665a1
+# ╟─d52ae61d-6279-4da2-97dd-934d0f97d4b2
+# ╟─83c7f56e-defe-4f72-9e51-44bdba2b1a0c
+# ╟─a88188b7-6b29-47cf-a34c-71473509cc79
+# ╟─a53208d1-7a33-4950-8742-d4430fe621ae
+# ╠═a0186edd-8afa-46db-8b34-19e275214b5c
+# ╠═a7a3a395-a91a-40d2-80da-3e639d3c39b9
+# ╟─2dc1da6e-3da5-4681-b7bd-ac3358da23cb
+# ╠═bb612988-5e14-4d2d-ab4d-fe143161d06e
 # ╠═72079536-4c38-4c01-97c3-0d6e7f5756fb
 # ╠═ed831257-d970-462f-9ddc-436c16aadd0c
 # ╠═6ba91529-d230-4343-8994-36868e233f9a
-# ╠═383df7ac-de9a-4466-a137-eaff92839311
-# ╠═b1c42a12-f33c-4c5f-a94d-2867c83b197a
-# ╠═6c2648a8-e894-4f35-be28-d3f8aab665a1
-# ╠═51f36784-fe0e-4a11-8ade-32edcd2a41fb
-# ╠═d52ae61d-6279-4da2-97dd-934d0f97d4b2
-# ╠═ff0d78ba-7597-476c-8549-bfd1577e092c
-# ╟─83c7f56e-defe-4f72-9e51-44bdba2b1a0c
-# ╟─a88188b7-6b29-47cf-a34c-71473509cc79
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
