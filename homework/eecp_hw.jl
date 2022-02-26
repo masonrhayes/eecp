@@ -23,12 +23,23 @@ html"""
 <section id="energy-economics-climate-policy-homework" class="level2">
 <h2>Energy Economics &amp; Climate Policy Homework</h2>
 <p>by Mason Ross Hayes on 2022-02-26</p>
+	<p>for M2S2 EECP at Toulouse School of Economics</p>
 <p>done in  <a href="https://julialang.org"> <img src="https://user-images.githubusercontent.com/39578155/142780578-be2c8aa4-359c-43aa-9d3a-655d4b938f7d.png" width="60" height="38" /></a> using <a href="https://plutojl.org">Pluto.jl</a>🎈</p>
 </section>
 </body>
 </html>
 
 """
+
+# ╔═╡ e153118f-76f2-4655-a90e-7ce7daeb5734
+md"""
+- View the [code💻](https://github.com/masonrhayes/eecp/blob/master/homework/eecp_hw.jl)
+- View the [interactive notebook📓](https://masonrhayes.keybase.pub/projects/pluto/eecp_hw.html)
+- Download the [PDF📂](https://masonrhayes.keybase.pub/projects/pluto/eecp_hw.pdf)
+"""
+
+# ╔═╡ 4f5e0cd4-67c8-4585-b004-36b5c488715c
+PlutoUI.TableOfContents(indent = true, aside = false)
 
 # ╔═╡ 5f6503f1-a50c-454a-baca-55a898146f57
 md"""
@@ -129,8 +140,9 @@ md"""
 
 # ╔═╡ 94da671b-ca21-487e-8b80-d43e82bdbb3e
 md"""
+### The optimal price
 
-### When ``K =`` $(K̂[θ]) and ``θ =`` $(θ), then the optimal price is: $(round(P((df.a[θ], b, K̂[θ])), digits = 3))
+**When ``K =`` $(K̂[θ]) and ``θ =`` $(θ), then the optimal price is: $(round(P((df.a[θ], b, K̂[θ])), digits = 3))**
 """
 
 # ╔═╡ 83c7f56e-defe-4f72-9e51-44bdba2b1a0c
@@ -561,9 +573,11 @@ uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 
 # ╔═╡ Cell order:
 # ╟─c160c0bc-0b77-4206-a97c-a0da3d662939
+# ╟─e153118f-76f2-4655-a90e-7ce7daeb5734
+# ╟─4f5e0cd4-67c8-4585-b004-36b5c488715c
 # ╟─ce53326a-2a8a-4bb2-9b5f-c1ec1c2114a7
 # ╟─5f6503f1-a50c-454a-baca-55a898146f57
-# ╟─88aea7bd-3be8-4a21-8291-8e8d3a3aeca9
+# ╠═88aea7bd-3be8-4a21-8291-8e8d3a3aeca9
 # ╟─a28c77ef-e445-4ac2-b183-c4da98f3a4c2
 # ╟─ebda0a22-0d15-4eca-b7c8-72a80e27819b
 # ╟─d3818f0c-2223-4e04-b5f4-50e632087f61
